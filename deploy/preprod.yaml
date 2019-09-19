@@ -1,0 +1,40 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: henvendelse-les
+  namespace: default
+  labels:
+    team: {{team}}
+spec:
+  image: "navikt/henvendelse-les:{{version}}"
+  port: 7070
+  team: personoversikt
+  liveness:
+    path: /henvendelse-les/isAlive
+    initialDelay: 20
+    timeout: 1
+    periodSeconds: 5
+    failureThreshold: 10
+  readiness:
+    path: /henvendelse-les/isReady
+    initialDelay: 20
+    timeout: 1
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 512Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi
+  ingresses:
+    - https://henvendelse-les.nais.preprod.local
+    - https://modapp-q0.adeo.no/henvendelse-les
+  replicas:
+    min: 2
+    max: 6
+    cpuThresholdPercentage: 80
+  prometheus:
+    enabled: true
+    path: /henvendelse-les/metrics
+  vault:
+    enabled: true
