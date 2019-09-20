@@ -6,7 +6,7 @@ metadata:
   labels:
     team: personoversikt
 spec:
-  image: "navikt/henvendelse-les:{{version}}"
+  image: "docker.pkg.github.com/navikt/henvendelse-les/henvendelse-les:{{version}}"
   port: 8991
   team: personoversikt
   liveness:
