@@ -27,7 +27,11 @@ morganSetup.format('tiny', ':method :url :status - [:subject, :res[aktorid]] - :
 // Url kan ha sensitivt innhold i queryparams, så vi fjerner alle query-params
 morganSetup.token('url', (req) => {
     const url = req.originalUrl || req.url;
-    return url.slice(0, url.indexOf('?'));
+    const queryParamStart = url.indexOf('?');
+    if (queryParamStart < 0) {
+        return url;
+    }
+    return url.slice(0, queryParamStart);
 });
 
 morganSetup.token('subject', (req) => {
