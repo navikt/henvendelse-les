@@ -1,4 +1,5 @@
 import winston from 'winston';
+import { Request, Response } from 'express';
 import { default as morganSetup } from 'morgan';
 import {AuthenticatedRequest} from "./jwt";
 
@@ -42,6 +43,13 @@ morganSetup.token('subject', (req) => {
     return authReq.user.sub;
 });
 
-export const morgan = isDev ? morganSetup('tiny') : morganSetup('tiny', { stream: loggerstream });
+const skip = (req: Request) => {
+    const url = req.originalUrl || req.url;
+    const isInternal = url.startsWith('/henvendelse-les/internal/');
+    const isOk = req.statusCode >= 200 && req.statusCode < 300;
+    return isInternal && isOk;
+};
+
+export const morgan = isDev ? morganSetup('tiny', { skip }) : morganSetup('tiny', { skip, stream: loggerstream });
 
 export default logger;
