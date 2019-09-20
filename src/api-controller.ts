@@ -1,8 +1,9 @@
 import express, {Request, Response} from "express";
 import bodyParser from 'body-parser';
 import cors, {CorsOptions} from 'cors';
-import {verifiserBehandlingsIder} from "./service";
+import {verifiserBehandlingsIdTilhorighet} from "./service";
 import {asArray} from "./utils";
+import jwt, {jwtErrorHandler} from "./jwt";
 
 const corsOptions: CorsOptions = {
     origin: [/\.adeo.no$/],
@@ -31,10 +32,11 @@ async function hentBehandlingsIderForFnr(request: Request, response: Response) {
         response.status(400);
         response.send("Ugyldig id: " + id);
     } else {
-        const result = await verifiserBehandlingsIder(fnr, asArray(id));
+        const result = await verifiserBehandlingsIdTilhorighet(fnr, asArray(id));
 
         response.set('Content-Type', 'application/json');
-        response.send(JSON.stringify(result));
+        response.set('AktorId', result.aktorId);
+        response.send(JSON.stringify(result.alleTilhorteBruker));
     }
 }
 
@@ -42,6 +44,8 @@ export default function setup() {
     const router = express.Router({caseSensitive: false});
     router.use(bodyParser.json());
     router.use(cors(corsOptions));
+    router.use(jwt);
+    router.use(jwtErrorHandler);
     router.options('*', cors(corsOptions));
 
     router.get("/behandlingsider", hentBehandlingsIderForFnr);

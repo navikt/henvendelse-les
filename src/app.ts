@@ -1,3 +1,4 @@
+import './last-env-config';
 import express, {Request, Response} from 'express';
 import prometheus from 'prom-client';
 import internalController from './internal-controller';

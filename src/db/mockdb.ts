@@ -13,7 +13,7 @@ const mockData: any = {
 
 const mockConnection: DBConnection = {
     execute<T>(sql: string, bindParams: string[]): Promise<DBResult<T>> {
-        if (sql.startsWith('select * from aktor_fnr_mapping')) {
+        if (sql.startsWith('select * from henvendelse.aktor_fnr_mapping')) {
             const fnr = bindParams[0] as string;
             const aktorId = mockData.aktorMapping[fnr];
 
@@ -23,7 +23,7 @@ const mockConnection: DBConnection = {
 
             const rows: T[] = [{AKTORID: aktorId, FNR: fnr} as any];
             return Promise.resolve({rows});
-        } else if (sql.startsWith('select behandlingsid from henvendelse')) {
+        } else if (sql.startsWith('select behandlingsid from henvendelse.henvendelse')) {
             const aktorId = bindParams[0] as string;
             const behandlingsIder = mockData.behandlingsIder[aktorId];
 

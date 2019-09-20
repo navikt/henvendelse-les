@@ -10,7 +10,8 @@ async function hentAktorid(connection: DBConnection, fnr: string): Promise<Maybe
         .map((rows) => rows[0]);
 }
 
-export async function verifiserBehandlingsIder(fnr: string, behandlingsIder: string[]): Promise<boolean> {
+export interface TilhorighetResultat { alleTilhorteBruker: boolean, aktorId: string }
+export async function verifiserBehandlingsIdTilhorighet(fnr: string, behandlingsIder: string[]): Promise<TilhorighetResultat> {
     return withConnection(async (connection) => {
         const aktorId = await hentAktorid(connection, fnr);
         if (aktorId.isNothing()) {
@@ -21,8 +22,9 @@ export async function verifiserBehandlingsIder(fnr: string, behandlingsIder: str
             .map(async ({AKTORID}) => {
                 const result = await connection.execute<{ BEHANDLINGSID: string }>(`select behandlingsid from henvendelse.henvendelse where aktor = :aktorId`, [AKTORID]);
                 const kjenteBehandlingsIder = result.rows.map(({ BEHANDLINGSID }) => BEHANDLINGSID);
-                return behandlingsIder.every((behandlingsId) => kjenteBehandlingsIder.includes(behandlingsId));
+                const alleTilhorteBruker = behandlingsIder.every((behandlingsId) => kjenteBehandlingsIder.includes(behandlingsId));
+                return { alleTilhorteBruker, aktorId: AKTORID };
             })
-            .getOrElse(false);
+            .getOrElse({ alleTilhorteBruker: false, aktorId: '' });
     });
 }
