@@ -4,10 +4,10 @@ metadata:
   name: henvendelse-les
   namespace: default
   labels:
-    team: {{team}}
+    team: personoversikt
 spec:
   image: "navikt/henvendelse-les:{{version}}"
-  port: 7070
+  port: 8991
   team: personoversikt
   liveness:
     path: /henvendelse-les/isAlive
@@ -27,8 +27,8 @@ spec:
       cpu: 50m
       memory: 128Mi
   ingresses:
-    - https://henvendelse-les.nais.adeo.no
-    - https://modapp.adeo.no/henvendelse-les
+    - https://henvendelse-les.nais.preprod.local
+    - https://modapp-q0.adeo.no/henvendelse-les
   replicas:
     min: 2
     max: 6
