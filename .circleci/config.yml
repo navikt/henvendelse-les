@@ -10,7 +10,7 @@ workflows:
       - pus/bygg-frontend:
           context: pus
           requires:
-            -pus/test-frontend
+            - pus/test-frontend
           filters:
             branches:
               ignore: master
