@@ -19,7 +19,6 @@ workflows:
           requires:
             - pus/test-frontend
           cluster: dev-fss
-          filepath: ./deploy/preprod.yaml
           filters:
             branches:
               only: master
@@ -35,7 +34,6 @@ workflows:
           requires:
             - prodsett
           cluster: prod-fss
-          filepath: ./deploy/prod.yaml
           filters:
             branches:
               only: master
