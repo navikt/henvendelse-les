@@ -1,6 +1,9 @@
 import {BindParameters, ConnectionAttributes} from "oracledb";
 import Log from "../logging";
-import {connectionString, user, password} from "./db-credentials";
+
+const user = process.env.HENVENDELSE_DB_USERNAME;
+const password = process.env.HENVENDELSE_DB_PASSWORD;
+const connectionString = process.env.HENVENDELSE_DB_URL.replace('jdbc:oracle:thin:@', '');
 
 export interface DB {
     getConnection(connectionAttributes: ConnectionAttributes): Promise<DBConnection>;
