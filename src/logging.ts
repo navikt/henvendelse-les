@@ -23,7 +23,7 @@ const loggerstream = {
     }
 };
 
-morganSetup.format('tiny', ':method :url :status - [:subject, :res[aktorid]] - :response-time ms');
+morganSetup.format('tiny', ':date[iso] :method :url :status - [:subject, :res[aktorid]] - :response-time ms');
 // Url kan ha sensitivt innhold i queryparams, så vi fjerner alle query-params
 morganSetup.token('url', (req) => {
     const url = req.originalUrl || req.url;
