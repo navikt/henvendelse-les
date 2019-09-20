@@ -43,10 +43,10 @@ morganSetup.token('subject', (req) => {
     return authReq.user.sub;
 });
 
-const skip = (req: Request) => {
+const skip = (req: Request, resp: Response) => {
     const url = req.originalUrl || req.url;
     const isInternal = url.startsWith('/henvendelse-les/internal/');
-    const isOk = req.statusCode >= 200 && req.statusCode < 300;
+    const isOk = resp.statusCode >= 200 && resp.statusCode < 300;
     return isInternal && isOk;
 };
 
