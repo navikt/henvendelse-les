@@ -34,6 +34,7 @@ workflows:
           requires:
             - prodsett
           cluster: prod-fss
+          filepath: ./nais.yaml
           filters:
             branches:
               only: master
