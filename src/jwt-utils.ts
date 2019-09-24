@@ -1,6 +1,7 @@
 import {RequestHandler} from 'express';
 import jwt from 'express-jwt';
 import jwksRsa from 'jwks-rsa';
+import {MaybeCls as Maybe} from "@nutgaard/maybe-ts";
 import {AuthenticatedRequest} from "./jwt";
 
 const secretResolver = jwksRsa.expressJwtSecret({
@@ -23,7 +24,10 @@ export interface SubjectResolverOptions {
 export function createSubjectResolver(options: SubjectResolverOptions): SubjectResolver {
     return {
         mock: (req, resp, next) => {
-            (req as AuthenticatedRequest).user = {
+            const property: 'user' | 'systemUser' = Maybe.of(options.jwtOptions)
+                .flatMap((opt) => Maybe.of(opt.requestProperty))
+                .getOrElse('user');
+            (req as AuthenticatedRequest)[property] = {
                 sub: options.mockSubject,
                 aud: 'app',
                 auth_time: 0,
