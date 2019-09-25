@@ -1,6 +1,6 @@
-import { ErrorRequestHandler, Request, RequestHandler } from 'express';
-import jwt from 'express-jwt';
-import jwksRsa from 'jwks-rsa';
+import {ErrorRequestHandler, Request, RequestHandler} from 'express';
+import {UnauthorizedError} from 'express-jwt';
+import {createSubjectResolver} from "./jwt-utils";
 
 export interface User {
     sub: string;
@@ -9,35 +9,43 @@ export interface User {
     realm: string;
     exp: number;
 }
-export type AuthenticatedRequest = Request & { user: User };
 
-const jwtImpl: RequestHandler = jwt({
-    secret: jwksRsa.expressJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 5,
-        jwksUri: process.env.ISSO_JWKS_URL
-    }),
-    issues: process.env.ISSO_ISSUER,
-    algorithms: ['RS256']
+export type AuthenticatedRequest = Request & { user: User; systemUser: User; };
+
+const userJwt = createSubjectResolver({mockSubject: 'Z999999'});
+const systemJwt = createSubjectResolver({
+    mockSubject: 'srvModiabrukerdialog',
+    jwtOptions: {
+        requestProperty: 'systemUser',
+        getToken(req: Request) {
+            const systemAuthroization: string | undefined = req.headers.systemauthorization as string;
+            if (systemAuthroization && systemAuthroization.split(' ')[0] === 'Bearer') {
+                return systemAuthroization.split(' ')[1];
+            } else {
+                throw new UnauthorizedError('credentials_required', {message: 'No systemAuthorization token was found'});
+            }
+        }
+    }
 });
 
-const jwtMock: RequestHandler = (req, resp, next) => {
-    (req as AuthenticatedRequest).user = {
-        sub: 'Z999999',
-        aud: 'app',
-        auth_time: 0,
-        realm: '/',
-        exp: 0
-    };
-
-    next()
+const verifySystemUser: RequestHandler = (req: AuthenticatedRequest, resp, next) => {
+    const systemUser = req.systemUser ? req.systemUser.sub : '';
+    if (systemUser === 'srvModiabrukerdialog') {
+        next();
+    } else {
+        const message = systemUser === '' ? 'SystemUser subject was empty' : `Unrecognized systemUser: ${systemUser}`;
+        throw new UnauthorizedError('invalid_token', {message})
+    }
 };
 
-export default process.env.USE_MOCK === 'true' ? jwtMock : jwtImpl;
-
-export const jwtErrorHandler : ErrorRequestHandler = (err, req, res, next) => {
+const jwtErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     if (err.name === 'UnauthorizedError') {
         res.status(401).send(err.message)
     }
 };
+
+const jwtMock = [userJwt.mock, systemJwt.mock, verifySystemUser, jwtErrorHandler];
+const jwtImpl = [userJwt.real, systemJwt.real, verifySystemUser, jwtErrorHandler];
+
+export default process.env.USE_MOCK === 'true' ? jwtMock : jwtImpl;
+

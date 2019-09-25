@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import cors, {CorsOptions} from 'cors';
 import {verifiserBehandlingsIdTilhorighet} from "./service";
 import {asArray} from "./utils";
-import jwt, {jwtErrorHandler} from "./jwt";
+import jwt from "./jwt";
 
 const corsOptions: CorsOptions = {
     origin: [/\.adeo.no$/],
@@ -45,7 +45,6 @@ export default function setup() {
     router.use(bodyParser.json());
     router.use(cors(corsOptions));
     router.use(jwt);
-    router.use(jwtErrorHandler);
     router.options('*', cors(corsOptions));
 
     router.get("/behandlingsider", hentBehandlingsIderForFnr);
