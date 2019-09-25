@@ -17,7 +17,7 @@ function gyldigFnr(fnr: string): boolean {
     return fnr && typeof fnr === 'string' && fnr.match(/^\d{11}$/) !== null;
 }
 
-function gyldigBehandlingsid(ids: string | string[]): boolean {
+function gyldigIder(ids: string | string[]): boolean {
     return asArray(ids)
         .filter((id) => id.length > 0)
         .length > 0
@@ -29,7 +29,7 @@ function hvisGyldigInput(fn: RequestHandler): RequestHandler {
         if (!gyldigFnr(fnr)) {
             response.status(400);
             response.send("Ugyldig fødselsnummer");
-        } else if (!gyldigBehandlingsid(id)) {
+        } else if (!gyldigIder(id)) {
             response.status(400);
             response.send("Ugyldig id: " + id);
         } else {
