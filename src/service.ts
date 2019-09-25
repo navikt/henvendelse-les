@@ -1,30 +1,52 @@
 import {MaybeCls as Maybe} from '@nutgaard/maybe-ts';
-import { withConnection, DBConnection } from './db/db';
-import {AktorIdFnrMapping} from "./types";
+import {DBConnection, withConnection} from './db/db';
+import {AktorIdFnrMapping, HenvendelseMetadata, HenvendelseMetadataDTO, Metadata, TilhorighetResultat} from "./types";
 import Log from "./logging";
 
+const henvendelseMetadataMapper = (data: HenvendelseMetadataDTO): HenvendelseMetadata => ({
+    henvendelseId: data.HENVENDELSE_ID,
+    behandlingsId: data.BEHANDLINGSID,
+    behandlingsKjedeId: data.BEHANDLINGSKJEDEID
+});
+
 async function hentAktorid(connection: DBConnection, fnr: string): Promise<Maybe<AktorIdFnrMapping>> {
-    const res = await connection.execute<AktorIdFnrMapping>('select * from henvendelse.aktor_fnr_mapping where fnr = :fnr', [fnr]);
-    return Maybe.of(res.rows)
+    const sql = 'select * from henvendelse.aktor_fnr_mapping where fnr = :fnr';
+    const result = await connection.execute<{ AKTORID: string; FNR: string; }>(sql, [fnr]);
+    return Maybe.of(result.rows)
         .filter((rows) => rows.length > 0)
-        .map((rows) => rows[0]);
+        .map((rows) => rows[0])
+        .map((data) => ({aktorId: data.AKTORID, fnr: data.FNR}));
 }
 
-export interface TilhorighetResultat { alleTilhorteBruker: boolean, aktorId: string }
-export async function verifiserBehandlingsIdTilhorighet(fnr: string, behandlingsIder: string[]): Promise<TilhorighetResultat> {
+async function hentHenvendelseMetadata(fnr: string): Promise<Metadata> {
     return withConnection(async (connection) => {
-        const aktorId = await hentAktorid(connection, fnr);
-        if (aktorId.isNothing()) {
+        const maybeAktorId: Maybe<AktorIdFnrMapping> = await hentAktorid(connection, fnr);
+        if (maybeAktorId.isNothing()) {
             Log.warn(`Fant ikke aktørId for ${fnr}`);
         }
 
-        return aktorId
-            .map(async ({AKTORID}) => {
-                const result = await connection.execute<{ BEHANDLINGSID: string }>(`select behandlingsid from henvendelse.henvendelse where aktor = :aktorId`, [AKTORID]);
-                const kjenteBehandlingsIder = result.rows.map(({ BEHANDLINGSID }) => BEHANDLINGSID);
-                const alleTilhorteBruker = behandlingsIder.every((behandlingsId) => kjenteBehandlingsIder.includes(behandlingsId));
-                return { alleTilhorteBruker, aktorId: AKTORID };
+        return maybeAktorId
+            .map(async ({aktorId}) => {
+                const sql = 'select behandlingsid, henvendelse_id, behandlingskjedeid from henvendelse.henvendelse where aktor = :aktorId';
+                const result = await connection.execute<HenvendelseMetadataDTO>(sql, [aktorId]);
+                const henvendelser: HenvendelseMetadata[] = result.rows.map(henvendelseMetadataMapper);
+
+                return {aktorId, henvendelser};
             })
-            .getOrElse({ alleTilhorteBruker: false, aktorId: '' });
+            .getOrElse({aktorId: '', henvendelser: []});
     });
+}
+
+export async function verifiserBehandlingsIdTilhorighet(fnr: string, behandlingsIder: string[]): Promise<TilhorighetResultat> {
+    const {aktorId, henvendelser} = await hentHenvendelseMetadata(fnr);
+    const kjenteBehandlingsIder = henvendelser.map(({behandlingsId}) => behandlingsId);
+    const alleTilhorteBruker = behandlingsIder.every((behandlingsId) => kjenteBehandlingsIder.includes(behandlingsId));
+    return {alleTilhorteBruker, aktorId};
+}
+
+export async function verifiserHenvendelseIdTilhorighet(fnr: string, henvendelseIder: string[]): Promise<TilhorighetResultat> {
+    const {aktorId, henvendelser} = await hentHenvendelseMetadata(fnr);
+    const kjenteHenvendelseIder = henvendelser.map(({henvendelseId}) => henvendelseId);
+    const alleTilhorteBruker = henvendelseIder.every((henvendelseId) => kjenteHenvendelseIder.includes(henvendelseId));
+    return {alleTilhorteBruker, aktorId};
 }

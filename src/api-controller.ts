@@ -1,7 +1,7 @@
-import express, {Request, Response} from "express";
+import express, {Request, Response, NextFunction, RequestHandler} from "express";
 import bodyParser from 'body-parser';
 import cors, {CorsOptions} from 'cors';
-import {verifiserBehandlingsIdTilhorighet} from "./service";
+import * as service from "./service";
 import {asArray} from "./utils";
 import jwt from "./jwt";
 
@@ -17,27 +17,43 @@ function gyldigFnr(fnr: string): boolean {
     return fnr && typeof fnr === 'string' && fnr.match(/^\d{11}$/) !== null;
 }
 
-function gyldigBehandlingsid(ids: string | string[]): boolean {
+function gyldigIder(ids: string | string[]): boolean {
     return asArray(ids)
         .filter((id) => id.length > 0)
         .length > 0
 }
 
-async function hentBehandlingsIderForFnr(request: Request, response: Response) {
-    const {fnr, id} = request.query;
-    if (!gyldigFnr(fnr)) {
-        response.status(400);
-        response.send("Ugyldig fødselsnummer");
-    } else if (!gyldigBehandlingsid(id)) {
-        response.status(400);
-        response.send("Ugyldig id: " + id);
-    } else {
-        const result = await verifiserBehandlingsIdTilhorighet(fnr, asArray(id));
-
-        response.set('Content-Type', 'application/json');
-        response.set('AktorId', result.aktorId);
-        response.send(JSON.stringify(result.alleTilhorteBruker));
+function hvisGyldigInput(fn: RequestHandler): RequestHandler {
+    return (request: Request, response: Response, next: NextFunction) => {
+        const {fnr, id} = request.query;
+        if (!gyldigFnr(fnr)) {
+            response.status(400);
+            response.send("Ugyldig fødselsnummer");
+        } else if (!gyldigIder(id)) {
+            response.status(400);
+            response.send("Ugyldig id: " + id);
+        } else {
+            return fn(request, response, next);
+        }
     }
+}
+
+async function verifiserBehandlingsIdTilhorighet(request: Request, response: Response) {
+    const {fnr, id} = request.query;
+    const result = await service.verifiserBehandlingsIdTilhorighet(fnr, asArray(id));
+
+    response.set('Content-Type', 'application/json');
+    response.set('AktorId', result.aktorId);
+    response.send(JSON.stringify(result.alleTilhorteBruker));
+}
+
+async function verifiserHenvendelseIdTilhorighet(request: Request, response: Response) {
+    const {fnr, id} = request.query;
+    const result = await service.verifiserHenvendelseIdTilhorighet(fnr, asArray(id));
+
+    response.set('Content-Type', 'application/json');
+    response.set('AktorId', result.aktorId);
+    response.send(JSON.stringify(result.alleTilhorteBruker));
 }
 
 export default function setup() {
@@ -47,7 +63,8 @@ export default function setup() {
     router.use(jwt);
     router.options('*', cors(corsOptions));
 
-    router.get("/behandlingsider", hentBehandlingsIderForFnr);
+    router.get("/behandlingsider", hvisGyldigInput(verifiserBehandlingsIdTilhorighet));
+    router.get("/henvendelseider", hvisGyldigInput(verifiserHenvendelseIdTilhorighet));
 
     return router;
 }
