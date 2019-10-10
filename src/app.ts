@@ -18,6 +18,7 @@ app.use("/henvendelse-les", baseRouter);
 baseRouter.use("/api", apiController());
 baseRouter.use("/internal", internalController(prometheus.register));
 app.get("*", (request: Request, response: Response) => {
+	response.status(404);
 	response.send("henvendelse-les");
 });
 
