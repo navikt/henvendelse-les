@@ -1,4 +1,5 @@
 FROM collinestes/docker-node-oracle:latest
+FROM node:10
 RUN npm install -g n && n lts
 RUN node -v
 
