@@ -14,5 +14,7 @@ RUN npm ci
 ENV NODE_ENV=production
 RUN npm run build
 
+RUN ls -R
+
 COPY /dist /app/dist
 CMD node /dist/app.js
