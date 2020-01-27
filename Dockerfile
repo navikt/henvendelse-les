@@ -1,5 +1,5 @@
-FROM collinestes/docker-node-oracle:latest
-RUN npm install -g n && n lts
+FROM collinestes/docker-node-oracle:10-slim
+RUN npm install -g n && n 10.18.1
 RUN node -v
 
 ENV CI=true
@@ -13,5 +13,4 @@ RUN npm ci
 ENV NODE_ENV=production
 RUN npm run build
 
-COPY /dist/. /app/dist/.
-CMD node ./dist/app.js
+CMD node dist/app.js
