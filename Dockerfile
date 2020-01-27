@@ -1,5 +1,5 @@
 FROM collinestes/docker-node-oracle:latest
-RUN npm install -g n && n lts
+#RUN npm install -g n && n lts
 RUN node -v
 
 ENV CI=true
