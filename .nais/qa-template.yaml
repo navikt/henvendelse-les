@@ -24,17 +24,17 @@ spec:
     path: /henvendelse-les/internal/metrics
   resources:
     limits:
-      cpu: 2000m
-      memory: 512Mi
+      cpu: 200m
+      memory: 192Mi
     requests:
-      cpu: 50m
+      cpu: 100m
       memory: 128Mi
   ingresses:
     - https://henvendelse-les.nais.preprod.local
     - https://modapp-q0.adeo.no/henvendelse-les
   replicas:
     min: 2
-    max: 6
+    max: 4
     cpuThresholdPercentage: 80
   vault:
     enabled: true
