@@ -1,15 +1,48 @@
-import {RequestHandler} from 'express';
-import jwt from 'express-jwt';
+import {Request, RequestHandler} from 'express';
+import jwt, {SecretCallbackLong, secretType} from 'express-jwt';
 import jwksRsa from 'jwks-rsa';
 import {MaybeCls as Maybe} from "@nutgaard/maybe-ts";
 import {AuthenticatedRequest} from "./jwt";
 
-const secretResolver = jwksRsa.expressJwtSecret({
+const issoSecretResolver = jwksRsa.expressJwtSecret({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 5,
     jwksUri: process.env.ISSO_JWKS_URL
 });
+
+const stsSecretResolver = jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: process.env.STS_JWKS_URL
+});
+
+// tslint:disable-next-line:no-console
+console.log('jwks', process.env.ISSO_JWKS_URL, process.env.STS_JWKS_URL);
+
+interface SecretCallbackLongMap {
+    [issuer: string]: SecretCallbackLong
+}
+
+const jwksResolvers : SecretCallbackLongMap = {
+    [process.env.ISSO_ISSUER]: issoSecretResolver,
+    [process.env.STS_ISSUER]: stsSecretResolver,
+};
+
+function combine(resolvers: SecretCallbackLongMap): SecretCallbackLong {
+    return (req: Request, header: any, payload: any, done: (err: any, secret?: secretType) => void) => {
+        const issuer = payload.iss;
+        const resolver: SecretCallbackLong | undefined = resolvers[issuer];
+        if (!resolver) {
+            done("Unknown issuer: " + issuer, null);
+        } else {
+            resolver(req, header, payload, done);
+        }
+    }
+}
+
+const secretResolver: SecretCallbackLong = combine(jwksResolvers);
 
 export interface SubjectResolver {
     mock: RequestHandler;
@@ -39,7 +72,6 @@ export function createSubjectResolver(options: SubjectResolverOptions): SubjectR
         },
         real: jwt({
             secret: secretResolver,
-            issues: process.env.ISSO_ISSUER,
             algorithms: ['RS256'],
             ...(options.jwtOptions || {})
         })
