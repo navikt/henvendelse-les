@@ -13,5 +13,4 @@ RUN npm ci
 ENV NODE_ENV=production
 RUN npm run build
 
-ENV NODE_TLS_REJECT_UNAUTHORIZED="0"
 CMD node dist/app.js

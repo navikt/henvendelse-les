@@ -15,7 +15,8 @@ const stsSecretResolver = jwksRsa.expressJwtSecret({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 5,
-    jwksUri: process.env.STS_JWKS_URL
+    jwksUri: process.env.STS_JWKS_URL,
+    strictSsl: false
 });
 
 // tslint:disable-next-line:no-console
