@@ -1,6 +1,7 @@
 import {ErrorRequestHandler, Request, RequestHandler} from 'express';
 import {UnauthorizedError} from 'express-jwt';
 import {createSubjectResolver} from "./jwt-utils";
+import logger from "./logging";
 
 export interface User {
     sub: string;
@@ -40,6 +41,7 @@ const verifySystemUser: RequestHandler = (req: AuthenticatedRequest, resp, next)
 
 const jwtErrorHandler: ErrorRequestHandler = (err, req, res, next) => {
     if (err.name === 'UnauthorizedError') {
+        logger.warn("UnauthorizedError: " + err.message);
         res.status(401).send(err.message)
     }
 };

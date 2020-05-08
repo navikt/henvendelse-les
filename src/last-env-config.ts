@@ -11,6 +11,7 @@ declare global {
             ISSO_JWKS_URL: string;
             ISSO_ISSUER: string;
             USE_MOCK: string;
+            NAIS_CLUSTER_NAME: string;
         }
     }
 }
