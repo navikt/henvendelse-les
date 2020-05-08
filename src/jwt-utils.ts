@@ -19,9 +19,6 @@ const stsSecretResolver = jwksRsa.expressJwtSecret({
     strictSsl: false
 });
 
-// tslint:disable-next-line:no-console
-console.log('jwks', process.env.ISSO_JWKS_URL, process.env.STS_JWKS_URL);
-
 interface SecretCallbackLongMap {
     [issuer: string]: SecretCallbackLong
 }
