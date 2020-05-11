@@ -32,7 +32,6 @@ if (process.env.USE_MOCK === 'true') {
 export async function withConnection<T>(lambda: (connection: DBConnection) => T): Promise<T> {
     let connection: DBConnection;
     try {
-        Log.info(`SQL connection ${user} ${password} ${connectionString}`);
         connection = await dbImpl.getConnection({user, password, connectionString});
         return await lambda(connection);
     } catch (e) {
