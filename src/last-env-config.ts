@@ -10,6 +10,8 @@ declare global {
             HENVENDELSE_DB_URL: string;
             ISSO_JWKS_URL: string;
             ISSO_ISSUER: string;
+            STS_JWKS_URL: string;
+            STS_ISSUER: string;
             USE_MOCK: string;
         }
     }
@@ -20,7 +22,9 @@ const requiredEnvVars = [
     'HENVENDELSE_DB_PASSWORD',
     'HENVENDELSE_DB_URL',
     'ISSO_JWKS_URL',
-    'ISSO_ISSUER'
+    'ISSO_ISSUER',
+    'STS_JWKS_URL',
+    'STS_ISSUER'
 ];
 
 function setIfMissing(key: string, value: string) {
@@ -31,6 +35,8 @@ function setIfMissing(key: string, value: string) {
 
 setIfMissing('ISSO_JWKS_URL', 'https://isso-q.adeo.no/isso/oauth2/connect/jwk_uri');
 setIfMissing('ISSO_ISSUER', 'https://isso-q.adeo.no:443/isso/oauth2');
+setIfMissing('STS_JWKS_URL', 'https://security-token-service.nais.preprod.local/rest/v1/sts/jwks');
+setIfMissing('STS_ISSUER', 'https://security-token-service.nais.preprod.local');
 
 if (process.env.NODE_ENV === 'development') {
     dotenv.config({path: path.resolve(process.cwd(), 'db_user.env')});

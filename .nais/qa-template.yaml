@@ -43,3 +43,7 @@ spec:
       value: "https://isso-q.adeo.no/isso/oauth2/connect/jwk_uri"
     - name: ISSO_ISSUER
       value: "https://isso-q.adeo.no:443/isso/oauth2"
+    - name: STS_JWKS_URL
+      value: "https://security-token-service.nais.preprod.local/rest/v1/sts/jwks"
+    - name: STS_ISSUER
+      value: "https://security-token-service.nais.preprod.local"

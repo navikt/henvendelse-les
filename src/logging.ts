@@ -1,13 +1,14 @@
 import winston from 'winston';
 import { Request, Response } from 'express';
 import { default as morganSetup } from 'morgan';
-import {AuthenticatedRequest} from "./jwt";
+import { AuthenticatedRequest } from "./jwt";
 
 const isDev = process.env.NODE_ENV === 'development';
+const isPreprod = process.env.NAIS_CLUSTER_NAME === 'dev-fss';
 
 const options = {
     console: {
-        level: isDev ? 'debug' : 'info',
+        level: isDev || isPreprod ? 'debug' : 'info',
         handleExceptions: true,
         colorize: false
     }
@@ -24,7 +25,6 @@ const loggerstream = {
     }
 };
 
-morganSetup.format('tiny', ':date[iso] :method :url :status - [:subject, :res[aktorid]] - :response-time ms');
 // Url kan ha sensitivt innhold i queryparams, så vi fjerner alle query-params
 morganSetup.token('url', (req) => {
     const url = req.originalUrl || req.url;
@@ -50,6 +50,9 @@ const skip = (req: Request, resp: Response) => {
     return isInternal && isOk;
 };
 
+const accessDebugging = isPreprod ? "\nAuth :req[authorization]\nSystemAuth :req[systemauthorization]" : "";
+
+morganSetup.format('tiny', ":date[iso] :method :url :status - [:subject, :res[aktorid]] - :response-time ms" + accessDebugging);
 export const morgan = isDev ? morganSetup('tiny', { skip }) : morganSetup('tiny', { skip, stream: loggerstream });
 
 export default logger;
