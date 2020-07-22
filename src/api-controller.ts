@@ -1,3 +1,4 @@
+import * as core from "express-serve-static-core";
 import express, {Request, Response, NextFunction, RequestHandler} from "express";
 import bodyParser from 'body-parser';
 import cors, {CorsOptions} from 'cors';
@@ -13,13 +14,15 @@ const corsOptions: CorsOptions = {
     preflightContinue: false
 };
 
-function gyldigFnr(fnr: string): boolean {
+type TypedRequest = Request<core.ParamsDictionary, any, any, { fnr: string, id: string | string[] }>;
+
+function gyldigFnr(fnr: unknown): fnr is string {
     return fnr && typeof fnr === 'string' && fnr.match(/^\d{11}$/) !== null;
 }
 
-function gyldigIder(ids: string | string[]): boolean {
+function gyldigIder(ids: unknown | unknown[]): ids is string | string[] {
     return asArray(ids)
-        .filter((id) => id.length > 0)
+        .filter((id) => typeof id === 'string' && id.length > 0)
         .length > 0
 }
 
@@ -38,7 +41,7 @@ function hvisGyldigInput(fn: RequestHandler): RequestHandler {
     }
 }
 
-async function verifiserBehandlingsIdTilhorighet(request: Request, response: Response) {
+async function verifiserBehandlingsIdTilhorighet(request: TypedRequest, response: Response) {
     const {fnr, id} = request.query;
     const result = await service.verifiserBehandlingsIdTilhorighet(fnr, asArray(id));
 
@@ -47,7 +50,7 @@ async function verifiserBehandlingsIdTilhorighet(request: Request, response: Res
     response.send(JSON.stringify(result.alleTilhorteBruker));
 }
 
-async function verifiserHenvendelseIdTilhorighet(request: Request, response: Response) {
+async function verifiserHenvendelseIdTilhorighet(request: TypedRequest, response: Response) {
     const {fnr, id} = request.query;
     const result = await service.verifiserHenvendelseIdTilhorighet(fnr, asArray(id));
 
