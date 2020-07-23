@@ -1,3 +1,4 @@
+import * as http from "http";
 import winston from 'winston';
 import { Request, Response } from 'express';
 import { default as morganSetup } from 'morgan';
@@ -26,7 +27,8 @@ const loggerstream = {
 };
 
 // Url kan ha sensitivt innhold i queryparams, så vi fjerner alle query-params
-morganSetup.token('url', (req) => {
+type ExpressRequest = { originalUrl?: string; } & http.IncomingMessage;
+morganSetup.token<ExpressRequest>('url', (req) => {
     const url = req.originalUrl || req.url;
     const queryParamStart = url.indexOf('?');
     if (queryParamStart < 0) {
